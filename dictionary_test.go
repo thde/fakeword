@@ -18,12 +18,12 @@ func TestDictionary_Add(t *testing.T) {
 			[]string{"hi"},
 			&Dictionary{
 				counter: map[string]map[string]int{
-					"^": {"h": 1},
-					"^h": {"i": 1},
+					"^":   {"h": 1},
+					"^h":  {"i": 1},
 					"^hi": {"$": 1},
-					"h": {"i": 1},
-					"hi": {"$": 1},
-					"i": {"$": 1},
+					"h":   {"i": 1},
+					"hi":  {"$": 1},
+					"i":   {"$": 1},
 				},
 				PrefixLength: 4,
 			},

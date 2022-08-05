@@ -6,7 +6,7 @@ import (
 )
 
 func TestGenerator_Word(t *testing.T) {
-	// ensure we get reproducable results
+	// ensure we get reproducible results
 	random = rand.New(rand.NewSource(1))
 
 	type fields struct {
@@ -22,7 +22,7 @@ func TestGenerator_Word(t *testing.T) {
 			name: "simple",
 			fields: fields{
 				Probabilities: map[string]map[string]float32{"^": {"b": 1.0}, "b": {"$": 1.0}},
-				MaxSequences: 2,
+				MaxSequences:  2,
 			},
 			want: "b",
 		},
@@ -30,7 +30,7 @@ func TestGenerator_Word(t *testing.T) {
 			name: "empty",
 			fields: fields{
 				Probabilities: map[string]map[string]float32{},
-				MaxSequences: 2,
+				MaxSequences:  2,
 			},
 			want: "",
 		},
