@@ -21,7 +21,7 @@ func TestGenerator_Word(t *testing.T) {
 		{
 			name: "simple",
 			fields: fields{
-				Probabilities: map[string]map[string]float32{"^": {"a": 0.5, "b": 0.5}, "a": {"$": 1.0}, "b": {"$": 1.0}},
+				Probabilities: map[string]map[string]float32{"^": {"b": 1.0}, "b": {"$": 1.0}},
 				MaxSequences: 2,
 			},
 			want: "b",
