@@ -1,7 +1,7 @@
 // Package fakeword allows to generate fake words.
 // Adding words of a certain language, allows to
 // generate language like words.
-package fakeword
+package fakeword // import "thde.io/fakeword"
 
 import (
 	"math/rand"

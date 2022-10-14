@@ -3,7 +3,7 @@ package fakeword_test
 import (
 	"fmt"
 
-	"github.com/thde/fakeword"
+	"thde.io/fakeword"
 )
 
 func ExampleGenerator_Word() {

@@ -1,3 +1,3 @@
-module github.com/thde/fakeword
+module thde.io/fakeword
 
 go 1.18
