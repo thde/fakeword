@@ -15,7 +15,7 @@ type Dictionary struct {
 	counter      map[string]map[string]int
 }
 
-// Add adds words to a Dictionary.
+// Add words to a Dictionary.
 func (w *Dictionary) Add(words ...string) *Dictionary {
 	if w.PrefixLength == 0 {
 		w.PrefixLength = defaultPrefixLength
@@ -35,7 +35,7 @@ func (w *Dictionary) Add(words ...string) *Dictionary {
 	return w
 }
 
-// Read reads from an io.Reader and adds those words to a Dictionary.
+// Read from an io.Reader and adds those words to a Dictionary.
 // Lines prefixed with # are skipped.
 func (w *Dictionary) Read(in io.Reader) *Dictionary {
 	scanner := bufio.NewScanner(in)
@@ -52,7 +52,7 @@ func (w *Dictionary) Read(in io.Reader) *Dictionary {
 	return w
 }
 
-// Calculare returns a new Generator based on the words added
+// Generator returns a new Generator based on the words added
 // to the dictionary.
 func (w *Dictionary) Generator() Generator {
 	m := map[string]map[string]float32{}
@@ -75,7 +75,7 @@ func (w *Dictionary) Generator() Generator {
 	return Generator{Probabilities: m}
 }
 
-// count counts the amount of occurencies of a suffix
+// count the amount of occurencies of a suffix
 func (w *Dictionary) count(substr string) {
 	prefix := substr[:len(substr)-1]
 	suffix := substr[len(substr)-1:]

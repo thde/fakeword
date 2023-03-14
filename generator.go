@@ -10,6 +10,7 @@ import (
 )
 
 const (
+	// MaxSequencesDefault contains the default for Generator.MaxSequences
 	MaxSequencesDefault = 2
 
 	prefix = "^"
