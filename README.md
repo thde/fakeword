@@ -8,6 +8,7 @@ Go package fakeword allows to generate fake words.
 
 Adding some English words, will generate fake words that sound english.
 
+Try the example online on [pkg.go.dev](https://pkg.go.dev/thde.io/fakeword#example-Generator.Word).
 ```go
 package main
 
