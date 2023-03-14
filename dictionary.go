@@ -80,8 +80,7 @@ func (w *Dictionary) count(substr string) {
 	suffix := substr[len(substr)-1:]
 
 	if w.counter == nil {
-		m := map[string]map[string]int{}
-		w.counter = m
+		w.counter = map[string]map[string]int{}
 	}
 
 	_, ok := w.counter[prefix]
