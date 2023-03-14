@@ -2,7 +2,6 @@ package fakeword
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"strings"
 )
@@ -23,7 +22,7 @@ func (w *Dictionary) Add(words ...string) *Dictionary {
 
 	for _, word := range words {
 		word := strings.ToLower(strings.TrimSpace(word))
-		word = fmt.Sprintf("^%s$", word)
+		word = prefix + word + suffix
 
 		for i := 2; i <= w.PrefixLength; i++ {
 			for _, substr := range splitToLength(word, i) {
@@ -40,12 +39,12 @@ func (w *Dictionary) Add(words ...string) *Dictionary {
 func (w *Dictionary) Read(in io.Reader) *Dictionary {
 	scanner := bufio.NewScanner(in)
 	for scanner.Scan() {
-		l := strings.TrimSpace(scanner.Text())
-		if strings.HasPrefix(l, "#") {
+		line := strings.TrimSpace(scanner.Text())
+		if strings.HasPrefix(line, "#") {
 			continue
 		}
 
-		words := strings.Fields(scanner.Text())
+		words := strings.Fields(line)
 		w.Add(words...)
 	}
 
