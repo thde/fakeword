@@ -50,16 +50,18 @@ func (g Generator) Word() string {
 		if len(characters) > g.MaxSequences {
 			characters = characters[1:]
 		}
+
 		var nextAccumedProbs map[string]float32
 		n := 0
 		for {
 			str := strings.Join(characters[n:], "")
 			nextAccumedProbs = g.Probabilities[str]
-			n += 1
+			n++
 			if nextAccumedProbs != nil || n >= len(characters) {
 				break
 			}
 		}
+
 		nextCharacter := ""
 		r := random.Float32()
 		probability := float32(0)

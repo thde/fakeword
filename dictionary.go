@@ -88,7 +88,7 @@ func (w *Dictionary) count(substr string) {
 		w.counter[prefix] = map[string]int{}
 	}
 
-	w.counter[prefix][suffix] += 1
+	w.counter[prefix][suffix]++
 }
 
 // splitToLength splits a string to substrings of length.
