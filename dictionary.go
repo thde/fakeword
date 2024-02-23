@@ -74,7 +74,7 @@ func (w *Dictionary) Generator() Generator {
 	return Generator{Probabilities: m}
 }
 
-// count the amount of occurencies of a suffix
+// count the amount of occurencies of a suffix.
 func (w *Dictionary) count(substr string) {
 	prefix := substr[:len(substr)-1]
 	suffix := substr[len(substr)-1:]
@@ -91,7 +91,7 @@ func (w *Dictionary) count(substr string) {
 	w.counter[prefix][suffix] += 1
 }
 
-// splitToLength splits a string to substrings of length
+// splitToLength splits a string to substrings of length.
 func splitToLength(s string, length int) []string {
 	substrs := []string{}
 
