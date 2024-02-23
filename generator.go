@@ -4,9 +4,8 @@
 package fakeword // import "thde.io/fakeword"
 
 import (
-	"math/rand"
+	"math/rand/v2"
 	"strings"
-	"time"
 )
 
 const (
@@ -27,10 +26,19 @@ type (
 		// and a higher value creates words that are closer to the dictionary words.
 		// The default value is defined in MaxSequencesDefault.
 		MaxSequences int
+
+		// Random should return a 32-bit value as a uint32.
+		// Uses math/rand/v2's Uint32 if Random is nil.
+		Random func() uint32
 	}
 )
 
-var random = rand.New(rand.NewSource(time.Now().UnixNano()))
+// percentage converts the uint32 to a float32 in the half-open interval [0.0,1.0).
+// https://cs.opensource.google/go/go/+/refs/tags/go1.22.0:src/math/rand/v2/rand.go;l=211
+func percentage(n uint32) float32 {
+	// There are exactly 1<<24 float32s in [0,1). Use Intn(1<<24) / (1<<24).
+	return float32(n<<8>>8) / (1 << 24)
+}
 
 // Word generates a fake word with arbitrary length.
 func (g Generator) Word() string {
@@ -39,6 +47,11 @@ func (g Generator) Word() string {
 	}
 	if g.MaxSequences == 0 {
 		g.MaxSequences = MaxSequencesDefault
+	}
+
+	randomFunc := g.Random
+	if randomFunc == nil {
+		randomFunc = rand.Uint32
 	}
 
 	character := prefix
@@ -63,12 +76,12 @@ func (g Generator) Word() string {
 		}
 
 		nextCharacter := ""
-		r := random.Float32()
+		target := percentage(randomFunc())
 		probability := float32(0)
 		for ch, prob := range nextAccumedProbs {
 			nextCharacterCandidate := ch
 			probability += prob
-			if r <= probability {
+			if target <= probability {
 				nextCharacter = nextCharacterCandidate
 				break
 			}
