@@ -30,7 +30,7 @@ jobs:
             ${{ runner.os }}-go-
       - run: go mod download -x
       - run: go vet ./...
-      - uses: dominikh/staticcheck-action@v1.3.1
+      - uses: dominikh/staticcheck-action@v1.4.0
         with:
           install-go: false
       - run: go test -v ./... -race -bench=. -benchmem -cover -coverprofile cover.out 2>&1 | tee test.out
