@@ -3,6 +3,7 @@ package fakeword
 import (
 	"bufio"
 	"io"
+	"sort"
 	"strings"
 )
 
@@ -54,24 +55,42 @@ func (w *Dictionary) Read(in io.Reader) *Dictionary {
 // Generator returns a new Generator based on the words added
 // to the dictionary.
 func (w *Dictionary) Generator() Generator {
-	m := map[string]map[string]float32{}
+	probs := make(map[string]map[string]float32, len(w.counter))
+	compiled := make(map[string][]outcome, len(w.counter))
 
 	for ctx, counts := range w.counter {
-		results := map[string]float32{}
 		var sum int
-
 		for _, c := range counts {
 			sum += c
 		}
 
+		type pair struct {
+			sym   byte
+			count int
+		}
+		pairs := make([]pair, 0, len(counts))
+		inner := make(map[string]float32, len(counts))
 		for s, c := range counts {
-			results[s] = float32(c) / float32(sum)
+			inner[s] = float32(c) / float32(sum)
+			pairs = append(pairs, pair{s[0], c})
+		}
+		sort.Slice(pairs, func(i, j int) bool { return pairs[i].sym < pairs[j].sym })
+
+		outcomes := make([]outcome, len(pairs))
+		var cum float32
+		for i, p := range pairs {
+			cum += float32(p.count) / float32(sum)
+			outcomes[i] = outcome{sym: p.sym, cum: cum}
+		}
+		if len(outcomes) > 0 {
+			outcomes[len(outcomes)-1].cum = 1.0
 		}
 
-		m[ctx] = results
+		probs[ctx] = inner
+		compiled[ctx] = outcomes
 	}
 
-	return Generator{Probabilities: m}
+	return Generator{Probabilities: probs, compiled: compiled}
 }
 
 // count the amount of occurencies of a suffix.

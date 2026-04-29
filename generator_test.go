@@ -40,3 +40,29 @@ func TestGenerator_Word(t *testing.T) {
 		})
 	}
 }
+
+func TestGenerator_Word_Reproducible(t *testing.T) {
+	probs := map[string]map[string]float32{
+		"^": {"a": 0.4, "b": 0.3, "c": 0.3},
+		"a": {"b": 0.5, "c": 0.5},
+		"b": {"a": 0.5, "c": 0.5},
+		"c": {"$": 1.0},
+	}
+
+	var first string
+	for i := 0; i < 5; i++ {
+		g := Generator{
+			Probabilities: probs,
+			MaxSequences:  2,
+			Random:        rand.New(rand.NewPCG(42, 0)).Uint32,
+		}
+		got := g.Word()
+		if i == 0 {
+			first = got
+			continue
+		}
+		if got != first {
+			t.Errorf("seeded Word() not reproducible: run 0 = %q, run %d = %q", first, i, got)
+		}
+	}
+}

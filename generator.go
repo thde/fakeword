@@ -9,7 +9,7 @@ package fakeword // import "thde.io/fakeword"
 
 import (
 	"math/rand/v2"
-	"strings"
+	"sort"
 )
 
 const (
@@ -34,6 +34,20 @@ type (
 		// Random should return a 32-bit value as a uint32.
 		// Uses math/rand/v2's Uint32 if Random is nil.
 		Random func() uint32
+
+		// compiled is the cumulative-probability form of Probabilities,
+		// kept for fast deterministic sampling. Populated by
+		// Dictionary.Generator. When nil, Word builds outcomes on demand
+		// from Probabilities (slower but still correct).
+		compiled map[string][]outcome
+	}
+
+	// outcome is a possible next-symbol with the cumulative probability
+	// up to and including this outcome within its context. Outcomes for
+	// a context are sorted by sym ascending so cum is monotonic.
+	outcome struct {
+		sym byte
+		cum float32
 	}
 )
 
@@ -46,7 +60,7 @@ func percentage(n uint32) float32 {
 
 // Word generates a fake word with arbitrary length.
 func (g Generator) Word() string {
-	if len(g.Probabilities) == 0 {
+	if len(g.Probabilities) == 0 && len(g.compiled) == 0 {
 		return ""
 	}
 	maxSeq := g.MaxSequences
@@ -59,44 +73,80 @@ func (g Generator) Word() string {
 		randomFunc = rand.Uint32
 	}
 
-	character := prefix
-	word := ""
-	characters := []string{}
-
-	for character != suffix {
-		characters = append(characters, character)
-		if len(characters) > maxSeq {
-			characters = characters[1:]
+	buf := []byte{prefix[0]}
+	for {
+		start := len(buf) - maxSeq
+		if start < 0 {
+			start = 0
 		}
 
-		var nextAccumedProbs map[string]float32
-		n := 0
-		for {
-			str := strings.Join(characters[n:], "")
-			nextAccumedProbs = g.Probabilities[str]
-			n++
-			if nextAccumedProbs != nil || n >= len(characters) {
-				break
-			}
+		outcomes := g.contextOutcomes(buf[start:])
+		if len(outcomes) == 0 {
+			break
 		}
 
-		nextCharacter := ""
-		target := percentage(randomFunc())
-		probability := float32(0)
-		for ch, prob := range nextAccumedProbs {
-			nextCharacterCandidate := ch
-			probability += prob
-			if target <= probability {
-				nextCharacter = nextCharacterCandidate
-				break
-			}
+		r := percentage(randomFunc())
+		idx := sort.Search(len(outcomes), func(i int) bool {
+			return outcomes[i].cum >= r
+		})
+		if idx == len(outcomes) {
+			idx = len(outcomes) - 1
 		}
-		if nextCharacter != suffix {
-			word += nextCharacter
+		next := outcomes[idx].sym
+
+		if next == suffix[0] {
+			break
 		}
-		character = nextCharacter
+		buf = append(buf, next)
 	}
-	return word
+
+	return string(buf[1:])
+}
+
+// contextOutcomes returns the outcome distribution for the longest
+// suffix of window that has a known context, applying stupid-backoff.
+func (g Generator) contextOutcomes(window []byte) []outcome {
+	for s := 0; s < len(window); s++ {
+		key := string(window[s:])
+		if g.compiled != nil {
+			if oc, ok := g.compiled[key]; ok {
+				return oc
+			}
+			continue
+		}
+		if probs, ok := g.Probabilities[key]; ok {
+			return compileContext(probs)
+		}
+	}
+	return nil
+}
+
+// compileContext converts a per-context probability map into a sorted
+// cumulative-probability slice for binary-search sampling.
+func compileContext(probs map[string]float32) []outcome {
+	type pair struct {
+		sym  byte
+		prob float32
+	}
+	pairs := make([]pair, 0, len(probs))
+	for s, p := range probs {
+		if len(s) == 0 {
+			continue
+		}
+		pairs = append(pairs, pair{s[0], p})
+	}
+	sort.Slice(pairs, func(i, j int) bool { return pairs[i].sym < pairs[j].sym })
+
+	outcomes := make([]outcome, len(pairs))
+	var cum float32
+	for i, p := range pairs {
+		cum += p.prob
+		outcomes[i] = outcome{sym: p.sym, cum: cum}
+	}
+	if len(outcomes) > 0 {
+		outcomes[len(outcomes)-1].cum = 1.0
+	}
+	return outcomes
 }
 
 // WordWithDistance returns a fake word with variable length.

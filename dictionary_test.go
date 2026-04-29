@@ -84,8 +84,8 @@ func TestDictionary_Generator(t *testing.T) {
 			}
 
 			got := w.Generator()
-			if !reflect.DeepEqual(got, Generator{Probabilities: tt.want}) {
-				t.Errorf("Words.Generator() = %v, want %v", got, tt.want)
+			if !reflect.DeepEqual(got.Probabilities, tt.want) {
+				t.Errorf("Words.Generator().Probabilities = %v, want %v", got.Probabilities, tt.want)
 			}
 		})
 	}
