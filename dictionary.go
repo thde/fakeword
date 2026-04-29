@@ -56,19 +56,19 @@ func (w *Dictionary) Read(in io.Reader) *Dictionary {
 func (w *Dictionary) Generator() Generator {
 	m := map[string]map[string]float32{}
 
-	for prefix, suffix := range w.counter {
+	for ctx, counts := range w.counter {
 		results := map[string]float32{}
 		var sum int
 
-		for _, c := range suffix {
+		for _, c := range counts {
 			sum += c
 		}
 
-		for s, c := range suffix {
+		for s, c := range counts {
 			results[s] = float32(c) / float32(sum)
 		}
 
-		m[prefix] = results
+		m[ctx] = results
 	}
 
 	return Generator{Probabilities: m}
