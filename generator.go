@@ -1,6 +1,10 @@
 // Package fakeword allows to generate fake words.
 // Adding words of a certain language, allows to
 // generate language like words.
+//
+// The generator is character-based and assumes ASCII input.
+// Multibyte runes will be processed byte-wise and produce
+// nonsensical contexts.
 package fakeword // import "thde.io/fakeword"
 
 import (
