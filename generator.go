@@ -49,8 +49,9 @@ func (g Generator) Word() string {
 	if len(g.Probabilities) == 0 {
 		return ""
 	}
-	if g.MaxSequences == 0 {
-		g.MaxSequences = MaxSequencesDefault
+	maxSeq := g.MaxSequences
+	if maxSeq == 0 {
+		maxSeq = MaxSequencesDefault
 	}
 
 	randomFunc := g.Random
@@ -64,7 +65,7 @@ func (g Generator) Word() string {
 
 	for character != suffix {
 		characters = append(characters, character)
-		if len(characters) > g.MaxSequences {
+		if len(characters) > maxSeq {
 			characters = characters[1:]
 		}
 
