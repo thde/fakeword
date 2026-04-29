@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-const defaultPrefixLength = 4
+const defaultPrefixLength = MaxSequencesDefault + 1
 
 // Dictionary stores words to be used to create a Generator.
 type Dictionary struct {
