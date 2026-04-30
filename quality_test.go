@@ -56,8 +56,10 @@ func TestQualitySample(t *testing.T) {
 // TestQualityPerplexity reports per-symbol perplexity of the model on
 // a held-out 20% split of the fixture. Lower is better; 1.0 means the
 // model assigns probability 1 to every test transition (impossible in
-// practice). For an A/B comparison of algorithm variants, run this
-// before and after the change and compare the printed numbers.
+// practice). Transitions the model has not seen are charged
+// scoreFloor; this floor is a scoring artefact, not a sampler change.
+// For an A/B comparison of algorithm variants, run this before and
+// after the change and compare the printed numbers.
 func TestQualityPerplexity(t *testing.T) {
 	words := readWords(t)
 
@@ -76,33 +78,35 @@ func TestQualityPerplexity(t *testing.T) {
 
 	var totalLogP float64
 	var totalSyms int
-	skipped := 0
 	for _, w := range test {
 		word := prefix + strings.ToLower(strings.TrimSpace(w)) + suffix
-		ok, logP, n := wordLogProb(g, word)
-		if !ok {
-			skipped++
-			continue
-		}
+		logP, n := wordLogProb(g, word)
 		totalLogP += logP
 		totalSyms += n
 	}
 
 	if totalSyms == 0 {
-		t.Fatalf("no test words could be scored (all had unseen contexts)")
+		t.Fatalf("no test words to score")
 	}
 
 	avgLogP := totalLogP / float64(totalSyms)
 	perplexity := math.Exp(-avgLogP)
 
-	t.Logf("perplexity: %.4f (scored %d/%d words, %d symbols, %d skipped due to zero probability)",
-		perplexity, len(test)-skipped, len(test), totalSyms, skipped)
+	t.Logf("perplexity: %.4f (over %d words, %d symbols, floor %g)",
+		perplexity, len(test), totalSyms, scoreFloor)
 }
+
+// scoreFloor is the per-symbol probability floor used when a test
+// transition has zero probability under the (unsmoothed) model.
+// It is a scoring-only patch: it makes perplexity well-defined for
+// unseen transitions without changing how Word samples.
+const scoreFloor = 1e-3
 
 // wordLogProb returns the natural-log probability of producing word
 // (already wrapped with prefix/suffix) under g, using the same backoff
-// as Word's sampler. ok is false if any transition has probability 0.
-func wordLogProb(g Generator, word string) (ok bool, logP float64, symbols int) {
+// as Word's sampler. Transitions with zero probability under the model
+// are charged scoreFloor instead, so the result is always finite.
+func wordLogProb(g Generator, word string) (logP float64, symbols int) {
 	maxSeq := g.MaxSequences
 	if maxSeq == 0 {
 		maxSeq = MaxSequencesDefault
@@ -128,10 +132,10 @@ func wordLogProb(g Generator, word string) (ok bool, logP float64, symbols int) 
 			}
 		}
 		if p == 0 {
-			return false, 0, 0
+			p = scoreFloor
 		}
 		logP += math.Log(float64(p))
 		symbols++
 	}
-	return true, logP, symbols
+	return logP, symbols
 }
