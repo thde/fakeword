@@ -159,9 +159,9 @@ func compileContext(probs map[string]float32) []outcome {
 // If a context has no non-suffix outcome before min is reached the
 // word ends early; if no context terminates naturally before max the
 // word is truncated.
-func (g Generator) WordWithDistance(min int, max int) string {
-	if min < 0 {
-		min = 0
+func (g Generator) WordWithDistance(minLen, maxLen int) string {
+	if minLen < 0 {
+		minLen = 0
 	}
 	if max < min {
 		max = min
