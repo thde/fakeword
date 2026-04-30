@@ -9,13 +9,13 @@ import (
 
 const defaultPrefixLength = MaxSequencesDefault + 1
 
-// Dictionary stores words to be used to create a Generator.
+// Dictionary stores words to be used to create a [Generator].
 type Dictionary struct {
 	PrefixLength int
 	counter      map[string]map[string]int
 }
 
-// Add words to a Dictionary.
+// Add adds words to the dictionary.
 func (w *Dictionary) Add(words ...string) *Dictionary {
 	if w.PrefixLength == 0 {
 		w.PrefixLength = defaultPrefixLength
@@ -35,7 +35,7 @@ func (w *Dictionary) Add(words ...string) *Dictionary {
 	return w
 }
 
-// Read from an io.Reader and adds those words to a Dictionary.
+// Read reads from r and adds those words to the dictionary.
 // Lines prefixed with # are skipped.
 func (w *Dictionary) Read(in io.Reader) *Dictionary {
 	scanner := bufio.NewScanner(in)
@@ -52,7 +52,7 @@ func (w *Dictionary) Read(in io.Reader) *Dictionary {
 	return w
 }
 
-// Generator returns a new Generator based on the words added
+// Generator returns a new [Generator] based on the words added
 // to the dictionary.
 func (w *Dictionary) Generator() Generator {
 	probs := make(map[string]map[string]float32, len(w.counter))
@@ -93,7 +93,7 @@ func (w *Dictionary) Generator() Generator {
 	return Generator{Probabilities: probs, compiled: compiled}
 }
 
-// count the amount of occurencies of a suffix.
+// count records the number of occurrences of each suffix.
 func (w *Dictionary) count(substr string) {
 	prefix := substr[:len(substr)-1]
 	suffix := substr[len(substr)-1:]
@@ -110,7 +110,7 @@ func (w *Dictionary) count(substr string) {
 	w.counter[prefix][suffix]++
 }
 
-// splitToLength splits a string to substrings of length.
+// splitToLength splits s into substrings of the given length.
 func splitToLength(s string, length int) []string {
 	substrs := []string{}
 

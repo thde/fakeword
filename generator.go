@@ -1,6 +1,5 @@
-// Package fakeword allows to generate fake words.
-// Adding words of a certain language, allows to
-// generate language like words.
+// Package fakeword generates fake words.
+// Adding words of a certain language allows generating language-like words.
 //
 // The generator is character-based and assumes ASCII input.
 // Multibyte runes will be processed byte-wise and produce
@@ -13,7 +12,7 @@ import (
 )
 
 const (
-	// MaxSequencesDefault contains the default for Generator.MaxSequences.
+	// MaxSequencesDefault is the default value of [Generator.MaxSequences].
 	MaxSequencesDefault = 2
 
 	prefix = "^"
@@ -21,23 +20,23 @@ const (
 )
 
 type (
-	// Generator allows to generate fake words.
+	// Generator generates fake words from a probability model.
 	Generator struct {
 		// Probabilities stores the probabilities of characters following on a string.
 		Probabilities map[string]map[string]float32
 		// MaxSequences defines how far back the algorithm looks
-		// to predict the next character. A smaller value icreases randomness
+		// to predict the next character. A smaller value increases randomness
 		// and a higher value creates words that are closer to the dictionary words.
-		// The default value is defined in MaxSequencesDefault.
+		// The default value is [MaxSequencesDefault].
 		MaxSequences int
 
 		// Random should return a 32-bit value as a uint32.
-		// Uses math/rand/v2's Uint32 if Random is nil.
+		// If nil, [math/rand/v2.Uint32] is used.
 		Random func() uint32
 
 		// compiled is the cumulative-probability form of Probabilities,
 		// kept for fast deterministic sampling. Populated by
-		// Dictionary.Generator. When nil, Word builds outcomes on demand
+		// [Dictionary.Generator]. When nil, [Generator.Word] builds outcomes on demand
 		// from Probabilities (slower but still correct).
 		compiled map[string][]outcome
 	}
@@ -61,8 +60,8 @@ func percentage(n uint32) float32 {
 // next samples the next symbol from the model given the current
 // buffer. If filter is non-nil it transforms the outcome set
 // before sampling (used to suppress the suffix marker while
-// WordWithDistance is below its minimum length).
-// Returns 0, false if no outcome was available.
+// [Generator.WordWithDistance] is below its minimum length).
+// It returns 0, false if no outcome was available.
 func (g Generator) next(buf []byte, filter func([]outcome) []outcome) (byte, bool) {
 	maxSeq := g.MaxSequences
 	if maxSeq == 0 {
@@ -133,7 +132,7 @@ func compileContext(probs map[string]float32) []outcome {
 	}
 	pairs := make([]pair, 0, len(probs))
 	for s, p := range probs {
-		if len(s) == 0 {
+		if s == "" {
 			continue
 		}
 		pairs = append(pairs, pair{s[0], p})
@@ -163,13 +162,13 @@ func (g Generator) WordWithDistance(minLen, maxLen int) string {
 	if minLen < 0 {
 		minLen = 0
 	}
-	if max < min {
-		max = min
+	if maxLen < minLen {
+		maxLen = minLen
 	}
 	buf := []byte{prefix[0]}
-	for len(buf)-1 < max {
+	for len(buf)-1 < maxLen {
 		var filter func([]outcome) []outcome
-		if len(buf)-1 < min {
+		if len(buf)-1 < minLen {
 			filter = withoutSuffix
 		}
 		sym, ok := g.next(buf, filter)
@@ -183,7 +182,7 @@ func (g Generator) WordWithDistance(minLen, maxLen int) string {
 
 // withoutSuffix returns the input outcomes with the suffix marker
 // removed and the remaining cumulative probabilities renormalized.
-// Returns nil if the input contained only the suffix marker.
+// It returns nil if the input contained only the suffix marker.
 func withoutSuffix(outcomes []outcome) []outcome {
 	sIdx := -1
 	for i, oc := range outcomes {
