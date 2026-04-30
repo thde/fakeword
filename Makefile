@@ -31,6 +31,7 @@ vet:
 	go vet ./...
 
 golangci-lint:
+	golangci-lint config verify
 	golangci-lint run
 
 staticcheck:

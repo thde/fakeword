@@ -41,7 +41,7 @@ type (
 		compiled map[string][]outcome
 	}
 
-	// outcome is a possible next-symbol with the cumulative probability
+	// Outcome is a possible next-symbol with the cumulative probability
 	// up to and including this outcome within its context. Outcomes for
 	// a context are sorted by sym ascending so cum is monotonic.
 	outcome struct {
