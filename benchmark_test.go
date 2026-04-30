@@ -22,7 +22,7 @@ func BenchmarkWord(b *testing.B) {
 	g.Random = rand.New(rand.NewPCG(1, 0)).Uint32
 	b.ReportAllocs()
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_ = g.Word()
 	}
 }
@@ -32,7 +32,7 @@ func BenchmarkWordWithDistance(b *testing.B) {
 	g.Random = rand.New(rand.NewPCG(1, 0)).Uint32
 	b.ReportAllocs()
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_ = g.WordWithDistance(6, 10)
 	}
 }
@@ -46,7 +46,7 @@ func BenchmarkWord_ManualProbs(b *testing.B) {
 	}
 	b.ReportAllocs()
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_ = g.Word()
 	}
 }
@@ -55,7 +55,7 @@ func BenchmarkDictionary_Generator(b *testing.B) {
 	dict := loadDict(b)
 	b.ReportAllocs()
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_ = dict.Generator()
 	}
 }
@@ -76,12 +76,12 @@ func BenchmarkWord_Parallel(b *testing.B) {
 // seeded Random func.
 func BenchmarkWord_Parallel_PerGoroutineRand(b *testing.B) {
 	base := loadDict(b).Generator()
-	var seed int64
+	var seed atomic.Int64
 	b.ReportAllocs()
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		g := base
-		g.Random = rand.New(rand.NewPCG(uint64(atomic.AddInt64(&seed, 1)), 0)).Uint32
+		g.Random = rand.New(rand.NewPCG(uint64(seed.Add(1)), 0)).Uint32
 		for pb.Next() {
 			_ = g.Word()
 		}

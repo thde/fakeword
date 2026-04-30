@@ -68,10 +68,7 @@ func (g Generator) next(buf []byte, filter func([]outcome) []outcome) (byte, boo
 	if maxSeq == 0 {
 		maxSeq = MaxSequencesDefault
 	}
-	start := len(buf) - maxSeq
-	if start < 0 {
-		start = 0
-	}
+	start := max(len(buf)-maxSeq, 0)
 	outcomes := g.contextOutcomes(buf[start:])
 	if filter != nil {
 		outcomes = filter(outcomes)
@@ -112,7 +109,7 @@ func (g Generator) Word() string {
 // contextOutcomes returns the outcome distribution for the longest
 // suffix of window that has a known context, applying stupid-backoff.
 func (g Generator) contextOutcomes(window []byte) []outcome {
-	for s := 0; s < len(window); s++ {
+	for s := range window {
 		key := string(window[s:])
 		if g.compiled != nil {
 			if oc, ok := g.compiled[key]; ok {

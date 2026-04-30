@@ -69,7 +69,7 @@ func TestGenerator_WordWithDistance(t *testing.T) {
 				MaxSequences:  2,
 				Random:        rand.New(rand.NewPCG(1, 0)).Uint32,
 			}
-			for i := 0; i < 200; i++ {
+			for range 200 {
 				w := g.WordWithDistance(tt.min, tt.max)
 				if len(w) < tt.min || len(w) > tt.max {
 					t.Errorf("got len(%q)=%d, want in [%d, %d]", w, len(w), tt.min, tt.max)
@@ -89,7 +89,7 @@ func TestGenerator_Word_Reproducible(t *testing.T) {
 	}
 
 	var first string
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		g := Generator{
 			Probabilities: probs,
 			MaxSequences:  2,

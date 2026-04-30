@@ -49,7 +49,7 @@ func TestQualitySample(t *testing.T) {
 
 	const samples = 30
 	t.Logf("sample of %d generated words:", samples)
-	for i := 0; i < samples; i++ {
+	for range samples {
 		t.Logf("  %s", g.WordWithDistance(4, 12))
 	}
 }
@@ -115,10 +115,7 @@ func wordLogProb(g Generator, word string) (logP float64, symbols int) {
 	}
 
 	for i := 1; i < len(word); i++ {
-		start := i - maxSeq
-		if start < 0 {
-			start = 0
-		}
+		start := max(i-maxSeq, 0)
 		outcomes := g.contextOutcomes([]byte(word[start:i]))
 		sym := word[i]
 
