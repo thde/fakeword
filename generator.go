@@ -58,48 +58,54 @@ func percentage(n uint32) float32 {
 	return float32(n<<8>>8) / (1 << 24)
 }
 
+// next samples the next symbol from the model given the current
+// buffer. If filter is non-nil it transforms the outcome set
+// before sampling (used to suppress the suffix marker while
+// WordWithDistance is below its minimum length).
+// Returns 0, false if no outcome was available.
+func (g Generator) next(buf []byte, filter func([]outcome) []outcome) (byte, bool) {
+	maxSeq := g.MaxSequences
+	if maxSeq == 0 {
+		maxSeq = MaxSequencesDefault
+	}
+	start := len(buf) - maxSeq
+	if start < 0 {
+		start = 0
+	}
+	outcomes := g.contextOutcomes(buf[start:])
+	if filter != nil {
+		outcomes = filter(outcomes)
+	}
+	if len(outcomes) == 0 {
+		return 0, false
+	}
+	randomFunc := g.Random
+	if randomFunc == nil {
+		randomFunc = rand.Uint32
+	}
+	r := percentage(randomFunc())
+	idx := sort.Search(len(outcomes), func(i int) bool {
+		return outcomes[i].cum >= r
+	})
+	if idx == len(outcomes) {
+		idx = len(outcomes) - 1
+	}
+	return outcomes[idx].sym, true
+}
+
 // Word generates a fake word with arbitrary length.
 func (g Generator) Word() string {
 	if len(g.Probabilities) == 0 && len(g.compiled) == 0 {
 		return ""
 	}
-	maxSeq := g.MaxSequences
-	if maxSeq == 0 {
-		maxSeq = MaxSequencesDefault
-	}
-
-	randomFunc := g.Random
-	if randomFunc == nil {
-		randomFunc = rand.Uint32
-	}
-
 	buf := []byte{prefix[0]}
 	for {
-		start := len(buf) - maxSeq
-		if start < 0 {
-			start = 0
-		}
-
-		outcomes := g.contextOutcomes(buf[start:])
-		if len(outcomes) == 0 {
+		sym, ok := g.next(buf, nil)
+		if !ok || sym == suffix[0] {
 			break
 		}
-
-		r := percentage(randomFunc())
-		idx := sort.Search(len(outcomes), func(i int) bool {
-			return outcomes[i].cum >= r
-		})
-		if idx == len(outcomes) {
-			idx = len(outcomes) - 1
-		}
-		next := outcomes[idx].sym
-
-		if next == suffix[0] {
-			break
-		}
-		buf = append(buf, next)
+		buf = append(buf, sym)
 	}
-
 	return string(buf[1:])
 }
 
@@ -149,13 +155,75 @@ func compileContext(probs map[string]float32) []outcome {
 	return outcomes
 }
 
-// WordWithDistance returns a fake word with variable length.
-// Running this function can be quite costly, as it will just
-// generate fake words until one with the correct length appears.
+// WordWithDistance returns a fake word whose length is in [min, max].
+// It conditions termination on length: the suffix marker is suppressed
+// while the word is shorter than min, and the loop hard-stops at max.
+//
+// If a context has no non-suffix outcome before min is reached the
+// word ends early; if no context terminates naturally before max the
+// word is truncated.
 func (g Generator) WordWithDistance(min int, max int) string {
-	fakeWord := ""
-	for min > len(fakeWord) || len(fakeWord) > max {
-		fakeWord = g.Word()
+	if min < 0 {
+		min = 0
 	}
-	return fakeWord
+	if max < min {
+		max = min
+	}
+	buf := []byte{prefix[0]}
+	for len(buf)-1 < max {
+		var filter func([]outcome) []outcome
+		if len(buf)-1 < min {
+			filter = withoutSuffix
+		}
+		sym, ok := g.next(buf, filter)
+		if !ok || sym == suffix[0] {
+			break
+		}
+		buf = append(buf, sym)
+	}
+	return string(buf[1:])
+}
+
+// withoutSuffix returns the input outcomes with the suffix marker
+// removed and the remaining cumulative probabilities renormalized.
+// Returns nil if the input contained only the suffix marker.
+func withoutSuffix(outcomes []outcome) []outcome {
+	sIdx := -1
+	for i, oc := range outcomes {
+		if oc.sym == suffix[0] {
+			sIdx = i
+			break
+		}
+	}
+	if sIdx == -1 {
+		return outcomes
+	}
+	if len(outcomes) == 1 {
+		return nil
+	}
+
+	var sMass float32
+	if sIdx == 0 {
+		sMass = outcomes[0].cum
+	} else {
+		sMass = outcomes[sIdx].cum - outcomes[sIdx-1].cum
+	}
+	keptMass := 1.0 - sMass
+	if keptMass <= 0 {
+		return nil
+	}
+
+	filtered := make([]outcome, 0, len(outcomes)-1)
+	var prev, cum float32
+	for i, oc := range outcomes {
+		diff := oc.cum - prev
+		prev = oc.cum
+		if i == sIdx {
+			continue
+		}
+		cum += diff / keptMass
+		filtered = append(filtered, outcome{sym: oc.sym, cum: cum})
+	}
+	filtered[len(filtered)-1].cum = 1.0
+	return filtered
 }

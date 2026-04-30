@@ -13,7 +13,7 @@ func loadDict(tb testing.TB) *Dictionary {
 	if err != nil {
 		tb.Fatalf("open testdata: %v", err)
 	}
-	tb.Cleanup(func() { f.Close() })
+	tb.Cleanup(func() { _ = f.Close() })
 	return (&Dictionary{}).Read(f)
 }
 
@@ -24,6 +24,16 @@ func BenchmarkWord(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_ = g.Word()
+	}
+}
+
+func BenchmarkWordWithDistance(b *testing.B) {
+	g := loadDict(b).Generator()
+	g.Random = rand.New(rand.NewPCG(1, 0)).Uint32
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = g.WordWithDistance(6, 10)
 	}
 }
 
