@@ -6,6 +6,7 @@ import (
 )
 
 func TestDictionary_Add(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name         string
 		prefixLength int
@@ -52,6 +53,7 @@ func TestDictionary_Add(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			w := &Dictionary{PrefixLength: tt.prefixLength}
 			if got := w.Add(tt.words...); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Dictionary.Add() = %v, want %v", got, tt.want)
@@ -61,6 +63,7 @@ func TestDictionary_Add(t *testing.T) {
 }
 
 func TestDictionary_Generator(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		counter map[string]map[string]int
@@ -79,6 +82,7 @@ func TestDictionary_Generator(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			w := &Dictionary{
 				counter: tt.counter,
 			}
@@ -92,6 +96,7 @@ func TestDictionary_Generator(t *testing.T) {
 }
 
 func TestDictionary_count(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		substrs []string
@@ -110,6 +115,7 @@ func TestDictionary_count(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			w := &Dictionary{}
 			for _, substr := range tt.substrs {
 				w.count(substr)
@@ -122,6 +128,7 @@ func TestDictionary_count(t *testing.T) {
 }
 
 func Test_splitToLength(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		s      string
 		length int
@@ -138,6 +145,7 @@ func Test_splitToLength(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := splitToLength(tt.args.s, tt.args.length); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("splitToLength() = %v, want %v", got, tt.want)
 			}

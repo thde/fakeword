@@ -36,6 +36,7 @@ func readWords(tb testing.TB) []string {
 // unless run with -v. Useful for eyeballing algorithm changes; not a
 // pass/fail check.
 func TestQualitySample(t *testing.T) {
+	t.Parallel()
 	if !testing.Verbose() {
 		t.Skip("run with -v to see generated samples")
 	}
@@ -61,6 +62,7 @@ func TestQualitySample(t *testing.T) {
 // For an A/B comparison of algorithm variants, run this before and
 // after the change and compare the printed numbers.
 func TestQualityPerplexity(t *testing.T) {
+	t.Parallel()
 	words := readWords(t)
 
 	var train, test []string

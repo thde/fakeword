@@ -6,7 +6,7 @@ import (
 )
 
 func TestGenerator_Word(t *testing.T) {
-	rand := rand.New(rand.NewPCG(1, 2))
+	t.Parallel()
 
 	tests := []struct {
 		name      string
@@ -32,7 +32,8 @@ func TestGenerator_Word(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.generator.Random = rand.Uint32
+			t.Parallel()
+			tt.generator.Random = rand.New(rand.NewPCG(1, 2)).Uint32
 
 			if got := tt.generator.Word(); got != tt.want {
 				t.Errorf("Generator.Word() = %v, want %v", got, tt.want)
@@ -42,6 +43,7 @@ func TestGenerator_Word(t *testing.T) {
 }
 
 func TestGenerator_WordWithDistance(t *testing.T) {
+	t.Parallel()
 	probs := map[string]map[string]float32{
 		"^": {"a": 0.5, "b": 0.5},
 		"a": {"b": 0.4, "c": 0.4, "$": 0.2},
@@ -61,6 +63,7 @@ func TestGenerator_WordWithDistance(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			g := Generator{
 				Probabilities: probs,
 				MaxSequences:  2,
@@ -77,6 +80,7 @@ func TestGenerator_WordWithDistance(t *testing.T) {
 }
 
 func TestGenerator_Word_Reproducible(t *testing.T) {
+	t.Parallel()
 	probs := map[string]map[string]float32{
 		"^": {"a": 0.4, "b": 0.3, "c": 0.3},
 		"a": {"b": 0.5, "c": 0.5},
